@@ -283,7 +283,14 @@ add_action('phpmailer_init', function ($mailer) {
     $mailer->Port       = 587;
     $mailer->Username   = $user;
     $mailer->Password   = $pass;
-    $mailer->SMTPSecure = 'tls';
+    $mailer->SMTPSecure = 'tls'; // STARTTLS
+    $mailer->SMTPOptions = [
+        'ssl' => [
+            'verify_peer'       => false,
+            'verify_peer_name'  => false,
+            'allow_self_signed' => true,
+        ],
+    ];
     if (!$mailer->From || $mailer->From === 'wordpress@' . parse_url(home_url(), PHP_URL_HOST)) {
         $mailer->From     = 'djilali.kadid.galerie@gmail.com';
         $mailer->FromName = 'Galerie Djilali Kadid';
