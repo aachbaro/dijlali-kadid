@@ -280,10 +280,10 @@ add_action('phpmailer_init', function ($mailer) {
     $mailer->isSMTP();
     $mailer->Host       = $host;
     $mailer->SMTPAuth   = true;
-    $mailer->Port       = 587;
+    $mailer->Port       = 465;
     $mailer->Username   = $user;
     $mailer->Password   = $pass;
-    $mailer->SMTPSecure = 'tls'; // STARTTLS
+    $mailer->SMTPSecure = 'ssl'; // SSL direct (port 465)
     $mailer->SMTPOptions = [
         'ssl' => [
             'verify_peer'       => false,
