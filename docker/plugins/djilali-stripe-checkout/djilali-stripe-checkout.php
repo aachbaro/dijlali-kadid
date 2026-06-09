@@ -269,9 +269,33 @@ add_action('wp_footer', function () {
 
 
 // ─────────────────────────────────────────────
-// 6. Flush rewrite rules à l'activation
+// 6. SMTP via Brevo (credentials stockés en wp_options)
+// ─────────────────────────────────────────────
+add_action('phpmailer_init', function ($mailer) {
+    $host = get_option('djilali_smtp_host', '');
+    $user = get_option('djilali_smtp_user', '');
+    $pass = get_option('djilali_smtp_pass', '');
+    if (!$host || !$user || !$pass) return;
+
+    $mailer->isSMTP();
+    $mailer->Host       = $host;
+    $mailer->SMTPAuth   = true;
+    $mailer->Port       = 587;
+    $mailer->Username   = $user;
+    $mailer->Password   = $pass;
+    $mailer->SMTPSecure = 'tls';
+    if (!$mailer->From || $mailer->From === 'wordpress@' . parse_url(home_url(), PHP_URL_HOST)) {
+        $mailer->From     = 'djilali.kadid.galerie@gmail.com';
+        $mailer->FromName = 'Galerie Djilali Kadid';
+    }
+});
+
+
+// ─────────────────────────────────────────────
+// 7. Flush rewrite rules à l'activation
 // ─────────────────────────────────────────────
 register_activation_hook(__FILE__, function () {
+    add_rewrite_rule('^acheter/(\d+)/?$', 'index.php?djilali_buy=$matches[1]', 'top');
     add_rewrite_rule('^commande-confirmee/?$', 'index.php?djilali_merci=1', 'top');
     flush_rewrite_rules();
 });
