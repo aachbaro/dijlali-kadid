@@ -1,6 +1,8 @@
 # Secrets & config locaux
 setup/.env.local
 wp-config.php
+docker/.env.prod
+docker/export/
 
 # Claude Code
 .claude/

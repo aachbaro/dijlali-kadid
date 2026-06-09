@@ -35,9 +35,6 @@ services:
       WORDPRESS_CONFIG_EXTRA: |
         define('WP_HOME', 'https://galerie-djilali-kadid.com');
         define('WP_SITEURL', 'https://galerie-djilali-kadid.com');
-        if (!empty($_SERVER['HTTP_X_FORWARDED_PROTO']) && 'https' === $_SERVER['HTTP_X_FORWARDED_PROTO']) {
-          $_SERVER['HTTPS'] = 'on';
-        }
         define('DISALLOW_FILE_EDIT', true);
         define('WP_MEMORY_LIMIT', '256M');
         define('WP_POST_REVISIONS', 5);
