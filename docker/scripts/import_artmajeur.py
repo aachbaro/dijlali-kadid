@@ -12,7 +12,7 @@ import subprocess, json, os, sys, tempfile
 
 CONTAINER_WP = "djilali-kadid-wordpress-1"
 WP_PATH      = "/var/www/html"
-TMP_DIR      = "/tmp/artmajeur_import"
+TMP_DIR      = "/var/www/html/wp-content/uploads/artmajeur_tmp"
 
 # ─── Données extraites d'Artmajeur ────────────────────────────────────────────
 ARTWORKS = [
@@ -128,7 +128,12 @@ for art in ARTWORKS:
 
     # 3a. Télécharger l'image
     print(f"\n  → {art['title']}")
-    out, err = docker_run(f"curl -sL --max-time 30 -o {repr(fpath)} {repr(art['img'])}")
+    out, err = docker_run(
+        f"curl -sL --max-time 30 "
+        f"-H 'User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36' "
+        f"-H 'Referer: https://www.artmajeur.com/' "
+        f"-o {repr(fpath)} {repr(art['img'])}"
+    )
     size_out, _ = docker_run(f"wc -c < {repr(fpath)}")
     size = int(size_out.strip()) if size_out.strip().isdigit() else 0
     if size < 5000:
