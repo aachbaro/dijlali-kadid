@@ -147,23 +147,24 @@ for art in ARTWORKS:
         continue
     print(f"    ✓ Média importé (ID {attach_id})")
 
-    # 3c. Créer le produit WooCommerce
+    # 3c. Créer le produit WooCommerce via wp eval (PHP)
     stock_qty  = 1 if art["status"] == "disponible" else 0
     stock_stat = "instock" if art["status"] == "disponible" else "outofstock"
-    descr = f"{art['desc']} {art['dims']}."
 
-    pid = wp(
-        f"wc product create --user=1 --porcelain "
-        f"--name={repr(art['title'])} "
-        f"--type=simple "
-        f"--regular_price={art['price']} "
-        f"--description={repr(descr)} "
-        f"--short_description={repr(art['medium'] + ', ' + art['dims'])} "
-        f"--manage_stock=true "
-        f"--stock_quantity={stock_qty} "
-        f"--stock_status={repr(stock_stat)} "
-        f"--images={repr('[{\"id\":' + attach_id + '}]')}"
+    php = (
+        f'$p = new WC_Product_Simple();'
+        f'$p->set_name({json.dumps(art["title"])});'
+        f'$p->set_regular_price("{art["price"]}");'
+        f'$p->set_description({json.dumps(art["medium"] + " — " + art["dims"] + ".")});'
+        f'$p->set_short_description({json.dumps(art["medium"] + ", " + art["dims"])});'
+        f'$p->set_manage_stock(true);'
+        f'$p->set_stock_quantity({stock_qty});'
+        f'$p->set_stock_status("{stock_stat}");'
+        f'$p->set_image_id({attach_id});'
+        f'$id = $p->save();'
+        f'echo $id;'
     )
+    pid = wp(f"eval {repr(php)}")
     if pid.isdigit():
         print(f"    ✓ Produit créé (ID {pid}), statut={art['status']}, prix={art['price']}€")
     else:
