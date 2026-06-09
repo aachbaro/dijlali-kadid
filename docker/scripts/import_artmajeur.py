@@ -128,12 +128,11 @@ for art in ARTWORKS:
 
     # 3a. Télécharger l'image
     print(f"\n  → {art['title']}")
-    out, err = docker_run(
-        f"curl -sL --max-time 30 "
-        f"-H 'User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36' "
-        f"-H 'Referer: https://www.artmajeur.com/' "
-        f"-o {repr(fpath)} {repr(art['img'])}"
-    )
+    ua  = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36"
+    ref = "https://www.artmajeur.com/"
+    img_mini = art["img"].replace("/master/", "/mini/")
+    curl_cmd = f'curl -sL --max-time 30 -H "User-Agent: {ua}" -H "Referer: {ref}" -o "{fpath}" "{img_mini}"'
+    out, err = docker_run(curl_cmd)
     size_out, _ = docker_run(f"wc -c < {repr(fpath)}")
     size = int(size_out.strip()) if size_out.strip().isdigit() else 0
     if size < 5000:
