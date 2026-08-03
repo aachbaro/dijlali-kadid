@@ -2,7 +2,7 @@
  Theme Name:   Kadence Child — Galerie d'art
  Description:  Thème enfant Kadence pour galerie d'art — ambiance galerie parisienne
  Template:     kadence
- Version:      1.0.21
+ Version:      1.0.24
  Text Domain:  kadence-child
 */
 
@@ -982,13 +982,40 @@ body.login { background-color: var(--color-bg); }
     .woocommerce ul.products {
         grid-template-columns: 1fr;
     }
-    .mvp-actions .button {
-        width: 100%;
+    .mvp-actions .button,
+    .mvp-actions .mvp-hero-button,
+    .mvp-actions a.mvp-hero-button {
+        display: block;
         text-align: center;
+        justify-content: center;
+        width: 100%;
+        box-sizing: border-box;
     }
     .artwork-product-details__grid {
         grid-template-columns: 1fr;
     }
+    /* Hero : titre lisible sur petits écrans */
+    .mvp-hero h1 {
+        font-size: clamp(2rem, 8.5vw, 2.6rem);
+    }
+    /* Hero : supprime le décalage artificiel vers le bas */
+    .mvp-hero__inner {
+        transform: none;
+    }
+    /* Hero : hauteur et padding réduits sur mobile */
+    .mvp-hero {
+        min-height: min(620px, calc(100svh - 60px));
+        padding-top: clamp(2.5rem, 8vw, 4rem);
+        padding-bottom: clamp(2.5rem, 8vw, 4rem);
+    }
+    /* Fiche œuvre : marge supérieure réduite */
+    .artwork-single {
+        margin-top: var(--sp-lg);
+        margin-bottom: var(--sp-md);
+    }
+    /* Titres de niveau 3/4 plus compacts */
+    h3 { font-size: var(--text-xl); }
+    h4 { font-size: var(--text-lg); }
 }
 
 /* ══════════════════════════════════════════════════════════
@@ -1387,24 +1414,52 @@ body.login { background-color: var(--color-bg); }
     }
 }
 
-/* Slow page reveal animations */
+/* ═══════════════════════════════════════════════════════════
+   ANIMATIONS — deux logiques distinctes
+   1) HERO : intro immédiate et douce au chargement (pas d'attente,
+      pas de glissement latéral) — chaque élément monte en fondu.
+   2) RESTE DU SITE : révélation au scroll, glissement discret
+      depuis la droite, en cascade (--reveal-delay posé en JS).
+   ═══════════════════════════════════════════════════════════ */
+
+/* Évite la barre de défilement horizontale pendant le glissement */
+body {
+    overflow-x: clip;
+}
+
+/* ── 1) Intro du hero au chargement ─────────────────────────── */
+@keyframes dj-hero-in {
+    from { opacity: 0; transform: translate3d(0, 18px, 0); }
+    to   { opacity: 1; transform: translate3d(0, 0, 0); }
+}
+
+.mvp-hero__inner > * {
+    opacity: 0;
+    animation: dj-hero-in 900ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.mvp-hero__inner > *:nth-child(1) { animation-delay: 120ms; }
+.mvp-hero__inner > *:nth-child(2) { animation-delay: 230ms; }
+.mvp-hero__inner > *:nth-child(3) { animation-delay: 340ms; }
+.mvp-hero__inner > *:nth-child(4) { animation-delay: 450ms; }
+.mvp-hero__inner > *:nth-child(5) { animation-delay: 560ms; }
+
+/* ── 2) Révélation au scroll ────────────────────────────────── */
 .reveal-on-scroll {
     opacity: 0;
-    transform: translate3d(0, 28px, 0);
-    filter: blur(2px);
+    transform: translate3d(30px, 0, 0);
     transition:
-        opacity 1200ms cubic-bezier(0.22, 1, 0.36, 1),
-        transform 1200ms cubic-bezier(0.22, 1, 0.36, 1),
-        filter 1200ms cubic-bezier(0.22, 1, 0.36, 1);
-    will-change: opacity, transform, filter;
+        opacity 900ms cubic-bezier(0.22, 1, 0.36, 1),
+        transform 900ms cubic-bezier(0.22, 1, 0.36, 1);
+    transition-delay: var(--reveal-delay, 0ms);
+    will-change: opacity, transform;
 }
 
 .reveal-on-scroll.is-revealed {
     opacity: 1;
     transform: translate3d(0, 0, 0);
-    filter: blur(0);
 }
 
+/* Œuvres, images, galeries : glissement un peu plus ample + léger zoom */
 .reveal-on-scroll:is(
     .wp-block-image,
     .wp-block-gallery,
@@ -1413,8 +1468,8 @@ body.login { background-color: var(--color-bg); }
     .artwork-card,
     .artwork-single__gallery
 ) {
-    transform: translate3d(0, 34px, 0) scale(0.985);
-    transition-duration: 1400ms;
+    transform: translate3d(40px, 0, 0) scale(0.99);
+    transition-duration: 1050ms;
 }
 
 .reveal-on-scroll.is-revealed:is(
@@ -1430,10 +1485,54 @@ body.login { background-color: var(--color-bg); }
 
 @media (prefers-reduced-motion: reduce) {
     .reveal-on-scroll,
-    .reveal-on-scroll.is-revealed {
+    .reveal-on-scroll.is-revealed,
+    .mvp-hero__inner > * {
         opacity: 1 !important;
         transform: none !important;
-        filter: none !important;
+        animation: none !important;
         transition: none !important;
+    }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   APPAREILS TACTILES — cohérence mobile
+   Le survol n'existe pas sur touch → on rend permanent
+   ce qui était conditionnel au :hover
+   ═══════════════════════════════════════════════════════════ */
+@media (hover: none) {
+
+    /* Voile dégradé : toujours actif sur les cartes galerie */
+    .woocommerce ul.products li.product > a.woocommerce-loop-product__link::after {
+        opacity: 1;
+        transition: none;
+    }
+
+    /* Titre et prix : toujours visibles (pas de disparition) */
+    .woocommerce ul.products li.product .woocommerce-loop-product__title,
+    .woocommerce ul.products li.product .price {
+        opacity: 1;
+        transform: translateY(0);
+        transition: none;
+    }
+
+    /* Image : pas d'effet zoom au tap */
+    .woocommerce ul.products li.product:hover img,
+    .artwork-card:hover .artwork-card__image img {
+        transform: none;
+    }
+
+    /* Home services : titre reste en bas (pas de translation vers le haut) */
+    .mvp-home-services .woocommerce ul.products li.product:hover .woocommerce-loop-product__title {
+        bottom: var(--sp-md);
+    }
+
+    /* Prestations : idem */
+    .page-slug-prestations .woocommerce ul.products li.product:hover .woocommerce-loop-product__title {
+        bottom: var(--sp-md);
+    }
+
+    /* Artwork cards (œuvres similaires) : pas d'effet zoom */
+    .artwork-card:hover {
+        box-shadow: none;
     }
 }

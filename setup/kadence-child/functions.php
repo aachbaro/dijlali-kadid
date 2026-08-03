@@ -108,7 +108,7 @@ add_action( 'wp_enqueue_scripts', function (): void {
   const shouldSkip = (node) => (
     !(node instanceof HTMLElement) ||
     node.dataset.revealReady ||
-    node.closest('.site-header, .site-footer, #wpadminbar, #cookie-notice, .cn-notice-container, .woocommerce-mini-cart, .modal') ||
+    node.closest('.site-header, .site-footer, #wpadminbar, #cookie-notice, .cn-notice-container, .woocommerce-mini-cart, .modal, .mvp-hero') ||
     node.matches('script, style, noscript, input, textarea, select, button') ||
     !hasVisibleContent(node)
   );
@@ -149,12 +149,27 @@ add_action( 'wp_enqueue_scripts', function (): void {
     }
 
     if (!observer) {
-      observer = new IntersectionObserver((entries, activeObserver) => {
-        entries.forEach((entry) => {
-          if (!entry.isIntersecting) {
-            return;
-          }
+      const STAGGER_STEP = 85;  // ms entre chaque élément d'une même vague
+      const STAGGER_CAP = 6;    // au-delà, on ne rallonge plus le délai
 
+      observer = new IntersectionObserver((entries, activeObserver) => {
+        // On ne garde que ceux qui entrent réellement dans l'écran
+        const shown = entries.filter((entry) => entry.isIntersecting);
+        if (!shown.length) {
+          return;
+        }
+
+        // Tri de haut en bas puis de gauche à droite → cascade naturelle
+        shown.sort((a, b) => {
+          const ra = a.target.getBoundingClientRect();
+          const rb = b.target.getBoundingClientRect();
+          return (ra.top - rb.top) || (ra.left - rb.left);
+        });
+
+        // Chaque élément de la vague se révèle un peu après le précédent
+        shown.forEach((entry, index) => {
+          const delay = Math.min(index, STAGGER_CAP) * STAGGER_STEP;
+          entry.target.style.setProperty('--reveal-delay', delay + 'ms');
           entry.target.classList.add('is-revealed');
           activeObserver.unobserve(entry.target);
         });
@@ -302,7 +317,7 @@ add_action( 'init', function (): void {
 
 // ── Termes par défaut ──────────────────────────────────────
 add_action( 'init', function (): void {
-    foreach ( [ 'Huile', 'Acrylique', 'Aquarelle', 'Dessin', 'Technique mixte', 'Autre' ] as $t ) {
+    foreach ( [ 'Gouache', 'Tempera', 'Huile', 'Acrylique', 'Aquarelle', 'Dessin', 'Technique mixte', 'Autre' ] as $t ) {
         if ( ! term_exists( $t, 'technique' ) ) {
             wp_insert_term( $t, 'technique' );
         }
@@ -576,16 +591,11 @@ add_action( 'woocommerce_after_shop_loop_item_title', function (): void {
     $parts      = array_filter( [ $technique, $dimensions, $year ] );
 
     if ( 'cultural_service' === get_post_meta( $post_id, '_service_type', true ) ) {
-        if ( is_page( 'prestations' ) ) {
-            $parts = [
-                'Lorem ipsum dolor sit amet, consectetur adipiscing elit.',
-            ];
-        } else {
-            $parts = array_filter( [
-                get_post_meta( $post_id, '_service_duration', true ),
-                get_post_meta( $post_id, '_service_format', true ),
-            ] );
+        $excerpt = $product->get_short_description();
+        if ( ! $excerpt ) {
+            $excerpt = wp_trim_words( $product->get_description(), 18, '…' );
         }
+        $parts = $excerpt ? [ wp_strip_all_tags( $excerpt ) ] : [];
     }
 
     if ( ! $parts ) {

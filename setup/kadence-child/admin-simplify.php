@@ -8,17 +8,35 @@ if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
 
+/**
+ * Capacites du role "Client Galerie".
+ *
+ * Reduit apres l'incident de securite du 08/07/2026 : le compte portant ce
+ * role avait ete compromis par force brute et disposait alors d'un acces aux
+ * reglages WooCommerce, donc aux passerelles de paiement Stripe.
+ *
+ * Retire volontairement :
+ *   manage_woocommerce        -> reglages WooCommerce et Stripe
+ *   edit_others_posts         -> modification des articles d'autrui
+ *   delete_others_posts       -> suppression des articles d'autrui
+ *   delete_published_posts    -> suppression d'articles publies
+ *   delete_others_products    -> suppression des oeuvres d'autrui
+ *   delete_published_products -> suppression d'oeuvres publiees
+ *
+ * Conserve sciemment :
+ *   edit_others_products      -> les oeuvres sont souvent creees par l'admin
+ *   edit_others_shop_orders   -> les commandes appartiennent aux clients,
+ *                                sans cette capacite aucune commande n'est
+ *                                traitable
+ */
 function galerie_client_caps(): array {
     return [
         'read'                     => true,
         'upload_files'             => true,
         'edit_posts'               => true,
-        'edit_others_posts'        => true,
         'edit_published_posts'     => true,
         'publish_posts'            => true,
         'delete_posts'             => true,
-        'delete_others_posts'      => true,
-        'delete_published_posts'   => true,
         'edit_product'             => true,
         'read_product'             => true,
         'delete_product'           => true,
@@ -27,16 +45,30 @@ function galerie_client_caps(): array {
         'edit_published_products'  => true,
         'publish_products'         => true,
         'delete_products'          => true,
-        'delete_others_products'   => true,
-        'delete_published_products' => true,
         'read_shop_order'          => true,
         'read_shop_orders'         => true,
         'edit_shop_order'          => true,
         'edit_shop_orders'         => true,
         'edit_others_shop_orders'  => true,
         'view_woocommerce_reports' => true,
-        'manage_woocommerce'       => true,
         'galerie_client_access'    => true,
+    ];
+}
+
+/**
+ * Capacites a retirer explicitement.
+ *
+ * add_cap() n'enleve rien : sans ce nettoyage, les capacites accordees par
+ * une version anterieure du theme resteraient en base indefiniment.
+ */
+function galerie_client_caps_revoquees(): array {
+    return [
+        'manage_woocommerce',
+        'edit_others_posts',
+        'delete_others_posts',
+        'delete_published_posts',
+        'delete_others_products',
+        'delete_published_products',
     ];
 }
 
@@ -50,6 +82,11 @@ function galerie_client_ensure_role(): void {
     if ( $role ) {
         foreach ( galerie_client_caps() as $cap => $grant ) {
             $role->add_cap( $cap, $grant );
+        }
+        foreach ( galerie_client_caps_revoquees() as $cap ) {
+            if ( isset( $role->capabilities[ $cap ] ) ) {
+                $role->remove_cap( $cap );
+            }
         }
     }
 }

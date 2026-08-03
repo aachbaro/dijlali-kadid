@@ -35,7 +35,7 @@ ARTWORKS = [
         "desc":   "Huile sur Toile, 72×40 cm.",
     },
     {
-        "title":  "Vue d'Venise au couchant",
+        "title":  "Vue de Venise au couchant",
         "medium": "Huile",
         "dims":   "65x85 cm",
         "status": "vendu",        # → stock = 0

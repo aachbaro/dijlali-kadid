@@ -1,0 +1,380 @@
+/* ── Bouton toggle Mode Édition ─────────────────────────────── */
+#djs-toggle {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    z-index: 99998;
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    border: none;
+    background: #1a1a1a;
+    color: #fff;
+    font-size: 22px;
+    cursor: pointer;
+    box-shadow: 0 3px 12px rgba(0,0,0,0.35);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s, transform 0.15s;
+}
+#djs-toggle:hover { background: #333; transform: scale(1.08); }
+#djs-toggle.djs-active { background: #8b1a1a; }
+#djs-toggle.djs-active:hover { background: #a02020; }
+
+/* Tooltip label */
+#djs-toggle::after {
+    content: "Mode Édition";
+    position: absolute;
+    right: 60px;
+    white-space: nowrap;
+    background: #1a1a1a;
+    color: #fff;
+    font-size: 12px;
+    font-family: sans-serif;
+    padding: 4px 10px;
+    border-radius: 4px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s;
+}
+#djs-toggle:hover::after { opacity: 1; }
+
+/* ── Bouton "ajout global" (visible seulement en mode édition) ── */
+#djs-global-btn {
+    position: fixed;
+    bottom: 24px;
+    right: 88px;              /* à gauche du bouton ✏️ */
+    z-index: 99998;
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    border: none;
+    background: #2a6e00;
+    color: #fff;
+    font-size: 24px;
+    cursor: pointer;
+    box-shadow: 0 3px 12px rgba(0,0,0,0.35);
+    display: none;           /* caché par défaut */
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s, transform 0.15s;
+}
+body.djs-edit-mode #djs-global-btn { display: flex; }
+#djs-global-btn:hover { background: #348a00; transform: scale(1.08); }
+#djs-global-btn::after {
+    content: "Ajouter du contenu";
+    position: absolute;
+    bottom: 60px;
+    right: 0;
+    white-space: nowrap;
+    background: #1a1a1a;
+    color: #fff;
+    font-size: 12px;
+    font-family: sans-serif;
+    padding: 4px 10px;
+    border-radius: 4px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s;
+}
+#djs-global-btn:hover::after { opacity: 1; }
+
+/* ── Zones éditables ────────────────────────────────────────── */
+.djs-editable {
+    outline: 2px dashed #8b1a1a !important;
+    outline-offset: 3px !important;
+    cursor: pointer !important;
+    position: relative !important;
+    transition: outline-color 0.2s !important;
+}
+.djs-editable:hover {
+    outline: 2px solid #8b1a1a !important;
+    background: rgba(139, 26, 26, 0.04) !important;
+}
+
+/* Badge "Cliquer pour modifier" */
+.djs-editable::before {
+    content: "✏️ Cliquer pour modifier";
+    position: absolute;
+    top: -28px;
+    left: 0;
+    background: #8b1a1a;
+    color: #fff;
+    font-size: 11px;
+    font-family: sans-serif;
+    padding: 2px 8px;
+    border-radius: 3px;
+    z-index: 9999;
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.15s;
+}
+.djs-editable:hover::before { opacity: 1; }
+
+/* Pour les images */
+.djs-editable-img {
+    outline: 3px dashed #8b1a1a !important;
+    outline-offset: 2px !important;
+    cursor: pointer !important;
+    position: relative !important;
+}
+.djs-editable-img:hover { opacity: 0.85 !important; }
+
+/* ── Overlay modal ──────────────────────────────────────────── */
+#djs-overlay,
+#djs-global-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.55);
+    z-index: 99999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    backdrop-filter: blur(2px);
+}
+#djs-overlay.djs-hidden,
+#djs-global-overlay.djs-hidden { display: none; }
+
+#djs-modal,
+#djs-global-modal {
+    background: #fff;
+    border-radius: 10px;
+    width: 100%;
+    max-width: 560px;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 8px 40px rgba(0,0,0,0.25);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+#djs-modal-header {
+    background: #8b1a1a;
+    color: #fff;
+    padding: 16px 20px;
+    border-radius: 10px 10px 0 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+#djs-modal-header h2 {
+    margin: 0;
+    font-size: 15px;
+    font-weight: 600;
+    color: #fff;
+}
+#djs-modal-close {
+    background: none;
+    border: none;
+    color: #fff;
+    font-size: 22px;
+    cursor: pointer;
+    line-height: 1;
+    padding: 0 4px;
+    opacity: 0.8;
+}
+#djs-modal-close:hover { opacity: 1; }
+
+#djs-modal-body { padding: 20px; }
+
+.djs-field-label {
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    color: #555;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 5px;
+    margin-top: 14px;
+}
+.djs-field-label:first-child { margin-top: 0; }
+
+.djs-current-text {
+    background: #f5f3ef;
+    border: 1px solid #e0d9cf;
+    border-radius: 5px;
+    padding: 10px 12px;
+    font-size: 13px;
+    color: #555;
+    white-space: pre-wrap;
+    max-height: 100px;
+    overflow-y: auto;
+    word-break: break-word;
+}
+.djs-current-img {
+    max-width: 200px;
+    border-radius: 5px;
+    border: 1px solid #e0d9cf;
+}
+
+#djs-proposed,
+#djs-global-message {
+    width: 100%;
+    min-height: 100px;
+    border: 2px solid #d4c9b8;
+    border-radius: 6px;
+    padding: 10px 12px;
+    font-size: 14px;
+    font-family: inherit;
+    box-sizing: border-box;
+    resize: vertical;
+    transition: border-color 0.2s;
+}
+#djs-proposed:focus,
+#djs-global-message:focus { outline: none; border-color: #8b1a1a; }
+
+/* Fichiers joints (ajout global) */
+#djs-global-files {
+    display: block;
+    margin-top: 4px;
+    font-size: 13px;
+    width: 100%;
+}
+#djs-global-filelist { margin-top: 8px; display: flex; flex-direction: column; gap: 6px; }
+.djs-file-chip {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    background: #f5f3ef;
+    border: 1px solid #e0d9cf;
+    border-radius: 8px;
+    padding: 6px 8px 6px 12px;
+    font-size: 13px;
+    color: #444;
+}
+.djs-file-chip span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.djs-file-remove {
+    flex-shrink: 0;
+    width: 22px;
+    height: 22px;
+    border: none;
+    border-radius: 50%;
+    background: #e0d9cf;
+    color: #8b1a1a;
+    font-size: 16px;
+    line-height: 1;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.15s;
+}
+.djs-file-remove:hover { background: #d4b0b0; }
+
+#djs-file-input {
+    display: block;
+    margin-top: 4px;
+    font-size: 13px;
+}
+#djs-img-preview {
+    max-width: 200px;
+    margin-top: 8px;
+    border-radius: 5px;
+    display: none;
+}
+
+#djs-note {
+    width: 100%;
+    border: 1px solid #d4c9b8;
+    border-radius: 6px;
+    padding: 8px 10px;
+    font-size: 13px;
+    font-family: inherit;
+    box-sizing: border-box;
+    resize: vertical;
+    min-height: 52px;
+}
+#djs-note:focus { outline: none; border-color: #8b1a1a; }
+
+#djs-modal-footer {
+    padding: 12px 20px 20px;
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+}
+#djs-submit,
+#djs-global-submit {
+    background: #8b1a1a;
+    color: #fff;
+    border: none;
+    padding: 10px 24px;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+#djs-submit:hover,
+#djs-global-submit:hover { background: #a02020; }
+#djs-submit:disabled,
+#djs-global-submit:disabled { background: #aaa; cursor: not-allowed; }
+
+#djs-cancel,
+#djs-global-cancel {
+    background: none;
+    border: 1px solid #ccc;
+    padding: 10px 18px;
+    border-radius: 6px;
+    font-size: 14px;
+    cursor: pointer;
+    color: #555;
+}
+#djs-cancel:hover,
+#djs-global-cancel:hover { background: #f5f5f5; }
+
+#djs-feedback,
+#djs-global-feedback {
+    padding: 10px 20px;
+    font-size: 13px;
+    display: none;
+    border-radius: 0 0 6px 6px;
+}
+#djs-feedback.djs-success,
+#djs-global-feedback.djs-success { background: #eef7e8; color: #2a6e00; display: block; }
+#djs-feedback.djs-error,
+#djs-global-feedback.djs-error   { background: #ffeaea; color: #8b1a1a; display: block; }
+
+/* ── Badge discret mode actif (au-dessus du bouton, en bas à droite) ── */
+#djs-badge {
+    position: fixed;
+    bottom: 86px;
+    right: 24px;
+    z-index: 99997;
+    background: rgba(26, 26, 26, 0.92);
+    color: #fff;
+    font-size: 12px;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    padding: 7px 14px;
+    border-radius: 20px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.25);
+    display: none;
+    align-items: center;
+    gap: 8px;
+    max-width: 260px;
+    line-height: 1.3;
+    animation: djs-fade-in 0.25s ease;
+}
+#djs-badge.djs-visible { display: flex; }
+.djs-badge-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #ff4d4d;
+    flex-shrink: 0;
+    animation: djs-pulse 1.6s ease-in-out infinite;
+}
+@keyframes djs-pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50%      { opacity: 0.4; transform: scale(0.75); }
+}
+@keyframes djs-fade-in {
+    from { opacity: 0; transform: translateY(6px); }
+    to   { opacity: 1; transform: translateY(0); }
+}

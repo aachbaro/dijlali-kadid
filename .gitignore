@@ -13,3 +13,12 @@ Thumbs.db
 
 # Logs
 *.log
+
+# Donnees de travail locales (exports de production, dumps, archives)
+local/
+docker/backups/
+
+# Sauvegardes horodatees de config et de secrets
+*.bak-*
+docker/.env.prod*
+!docker/.env.prod.example
