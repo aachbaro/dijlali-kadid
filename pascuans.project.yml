@@ -1,0 +1,29 @@
+schema_version: "1.0"
+name: site-wordpress-woocommerce
+type: site
+status: experimental
+repository:
+  remote: https://github.com/aachbaro/dijlali-kadid.git
+  default_branch: master
+presence:
+  local-desktop: required
+  home-server: optional
+execution:
+  requires: [php]
+  allowed_capabilities: [linux, windows, php, docker, network]
+validation: []
+ai:
+  implementer: claude
+  reviewer: codex
+  allow_auto_commit: false
+  allow_auto_push: false
+  allow_auto_merge: false
+  allow_auto_deploy: false
+deployment:
+  method: docker-compose
+  compose_file: docker/docker-compose.prod.yml
+  env_file: docker/.env.prod
+  service: wordpress
+  healthcheck: "http://127.0.0.1:8082/"
+standards: []
+shared: {}
